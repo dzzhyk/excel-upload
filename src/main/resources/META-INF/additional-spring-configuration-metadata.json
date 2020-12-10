@@ -1,0 +1,14 @@
+{
+  "properties": [
+    {
+      "name": "excel",
+      "type": "java.lang.String",
+      "description": "excel."
+    },
+    {
+      "name": "excel.save-path",
+      "type": "java.lang.String",
+      "description": "excel.save-path."
+    }
+  ]
+}

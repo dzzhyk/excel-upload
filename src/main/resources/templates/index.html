@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>超大Excel文件上传</title>
+    <link rel="stylesheet" th:href="@{/static/layui/css/layui.css}"  media="all">
+</head>
+<body>
+
+
+<div style="margin: 10px">
+
+    <h1>Excel文件上传</h1>
+
+    <div style="margin-top: 20px" id="bar" class="layui-progress layui-hide" lay-filter="demo" lay-showpercent="true">
+        <div class="layui-progress-bar layui-bg-red" lay-percent="0%"></div>
+    </div>
+
+    <button style="margin-top: 10px" type="button" class="layui-btn" id="file-upload">上传Excel文件</button>
+    <button style="margin-top: 10px" type="button" class="layui-btn layui-bg-orange layui-hide" id="file-retry">尝试重新上传</button>
+
+    <p id="msg" style="color: red; margin-top: 10px;"></p>
+
+    <table class="layui-table">
+        <colgroup>
+            <col th:width="150">
+            <col th:width="200">
+            <col th:width="100">
+            <col th:width="100">
+            <col th:width="200">
+        </colgroup>
+        <thead>
+        <tr>
+            <th>原始文件名称</th>
+            <th>服务器文件名称</th>
+            <th>文件大小</th>
+            <th>创建时间</th>
+            <th>文件操作</th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr th:each="file : ${fileList}">
+                <td>贤心</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<script th:src="@{/static/layui/layui.js}" charset="utf-8"></script>
+
+<script>
+
+    layui.use(['upload', 'element'], function() {
+
+
+
+        let $ = layui.jquery;
+        let upload = layui.upload;
+        let element = layui.element;
+        let pmsg = $("#msg");
+        let retryBtn = $("#file-retry");
+        let bar = $("#bar");
+
+        upload.render({
+            elem: '#file-upload',
+            url: 'http://localhost:8080/upload',
+            accept: 'file',
+            exts: 'xls|xlsx',
+            before: function(){
+                bar.removeClass("layui-hide");
+                element.progress('demo', "0%");
+            },
+            choose: function(obj){
+
+                obj.preview(function(index, file, result){
+                    //对上传失败的单个文件重新上传，一般在某个事件中使用
+                    // obj.upload(index, file);
+                });
+
+            },
+            done: function (res) {
+                if (res.code === 1){
+                    pmsg.text("上传成功：" + res.msg);
+                    bar.addClass("layui-hide");
+                }else{
+                    pmsg.text("上传失败：" + res.msg);
+                    retryBtn.removeClass("layui-hide");
+                }
+            },
+            progress: function(n, elem){
+                console.log(n);
+                let percent = n + '%';
+                element.progress('demo', percent);
+            },
+            error:function(index, upload) {
+                pmsg.text("上传失败：服务器或网络传输错误");
+                retryBtn.removeClass("layui-hide");
+            }
+        });
+    });
+
+</script>
+
+</body>
+</html>
