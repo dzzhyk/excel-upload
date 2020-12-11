@@ -1,56 +1,99 @@
 package com.yankaizhang.excel.controller;
 
+import com.yankaizhang.excel.service.FileService;
 import com.yankaizhang.excel.util.Result;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.UUID;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 文件上传controller
  * @author dzzhyk
  */
 @Controller
+@Scope("prototype")
 public class FileController {
 
     @Value(value = "${excel.save-path}")
     private String uploadPath;
 
-    @PostMapping("/upload")
-    @ResponseBody
-    public Result upload(MultipartFile file){
+    @Autowired
+    FileService fileService;
 
-        String trueName = file.getOriginalFilename();
-        if (null == trueName){
-            return Result.buildError("文件名为空");
-        }
-
-        // 尝试创建保存路径
-        File dir = new File(uploadPath);
-        if (!dir.exists()){
-            boolean mkdirs = dir.mkdirs();
-            if (!mkdirs){
-                return Result.buildError("创建文件目录失败");
-            }
-        }
-
-        String saveName = UUID.randomUUID().toString();
-        String saveSuffix = trueName.substring(trueName.lastIndexOf("."));
-        File newFile = new File(dir.getAbsolutePath() + File.separator + saveName + saveSuffix);
-
-        try {
-            file.transferTo(newFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return Result.buildError("转储文件失败");
-        }
-
-        return Result.buildSuccess("提交上传请求完成");
+    @RequestMapping({"/index", "/"})
+    public String index(Model model){
+        return "index";
     }
 
+    /**
+     * 文件上传
+     */
+    @RequestMapping(value = "/upload", method = RequestMethod.POST)
+    @ResponseBody
+    public Result upload(MultipartFile file){
+        System.out.println(file.getOriginalFilename());
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * 检查文件是否存在
+     */
+    @RequestMapping(value = "/checkFile", method = RequestMethod.POST)
+    @ResponseBody
+    public Result checkFile(@RequestParam("fileMd5") String fileMd5){
+        System.out.println("获取到MD5: " + fileMd5);
+        boolean exist = fileService.exist(fileMd5);
+        System.out.println("文件是否存在：" + exist);
+        if (exist){
+            return Result.buildSuccess();
+        }else{
+            return Result.buildError();
+        }
+    }
+
+    /**
+     * 检查分片是否已经存在
+     */
+    @RequestMapping(value = "/checkChunk", method = RequestMethod.POST)
+    @ResponseBody
+    public Result checkChunk(){
+        return null;
+    }
+
+    /**
+     * 合并分片
+     */
+    @RequestMapping(value = "/mergeChunk", method = RequestMethod.POST)
+    @ResponseBody
+    public Result mergeChunk(){
+        return null;
+    }
+
+
+    @RequestMapping("/download")
+    @ResponseBody
+    public void download(
+            HttpServletResponse response,
+            @RequestParam("f") String filename){
+        fileService.downloadFile(filename, response);
+    }
+
+    @RequestMapping("/delete")
+    @ResponseBody
+    public void delete(@RequestParam("f") String filename){
+        fileService.deleteFile(filename);
+    }
 }

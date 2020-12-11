@@ -9,6 +9,7 @@ public class Result implements Serializable {
     private static final Integer SUCCESS_CODE = 1;
     private static final Integer FAILED_CODE = -1;
 
+    // 响应码
     private Integer code;
     // 数据
     private Object data;
@@ -42,6 +43,11 @@ public class Result implements Serializable {
     // 成功，传入描述信息，数据
     public static Result buildSuccess(String msg, Object data) {
         return new Result(SUCCESS_CODE, data, msg);
+    }
+
+    // 失败
+    public static Result buildError() {
+        return new Result(FAILED_CODE, null, null);
     }
 
     // 失败，传入描述信息

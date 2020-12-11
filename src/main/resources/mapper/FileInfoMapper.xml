@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yankaizhang.excel.mapper.FileInfoMapper">
+
+    <sql id="BASE_TABLE">
+        file_info
+    </sql>
+
+    <sql id="BASE_COLUMN">
+         `id`, `true_name`, `save_name`, `size`, `type`, `created`, `path`, `url`, `file_md5`, `status`, `del_flag`
+    </sql>
+
+    <delete id="deleteBySaveName">
+        DELETE FROM
+        <include refid="BASE_TABLE"/>
+        WHERE `save_name` = #{filename};
+    </delete>
+
+    <select id="selectByFileMd5" parameterType="String" resultType="com.yankaizhang.excel.entity.FileInfo">
+        SELECT
+        <include refid="BASE_COLUMN"/>
+        FROM
+        <include refid="BASE_TABLE"/>
+        WHERE `file_md5` = #{fileMd5};
+    </select>
+
+    <select id="selectBySaveName" resultType="com.yankaizhang.excel.entity.FileInfo">
+        SELECT
+        <include refid="BASE_COLUMN"/>
+        FROM
+        <include refid="BASE_TABLE"/>
+        WHERE `save_name` = #{filename};
+    </select>
+
+</mapper>

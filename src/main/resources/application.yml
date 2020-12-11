@@ -2,6 +2,25 @@ server:
     port: 8080
 
 spring:
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        druid:
+            url: jdbc:mysql://localhost:3306/webupload?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+            username: root
+            password: root
+        type: com.alibaba.druid.pool.DruidDataSource
+
+    servlet:
+        # 文件上传限制
+        multipart:
+            max-file-size: 3MB
+            max-request-size: 3MB
+    data:
+        # mongoDB配置
+        mongodb:
+            host: 127.0.0.1
+            port: 27017
+            database: test
     thymeleaf:
         prefix: classpath:/templates/
         check-template-location: true
@@ -11,10 +30,19 @@ spring:
         cache: false
     mvc:
         static-path-pattern: /static/**
-    servlet:
-        multipart:
-            max-file-size: 200MB
-            max-request-size: 200MB
+    # 配置自动建表
+    jpa:
+        hibernate:
+            ddl-auto: create
+        show-sql: true
+
+
+mybatis-plus:
+    mapper-locations: classpath*:/mapper/**/*.xml
+    configuration:
+        log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    global-config:
+        banner: false
 
 excel:
     save-path: upload/
