@@ -235,7 +235,7 @@
                     success:function(res){
                         // 如果合并成功，尝试通知文件进行Excel导入
                         if(res.code === 1){
-                            toInsert(res.data);
+                            // toInsert(res.data);
                             console.log("合并分片完成: ", file.name, "res: ", res);
                         }
                     }
