@@ -2,11 +2,14 @@ package com.yankaizhang.excel.controller;
 
 import com.yankaizhang.excel.constant.ExcelConstant;
 import com.yankaizhang.excel.constant.FileStatusConstant;
+import com.yankaizhang.excel.entity.FileInfo;
 import com.yankaizhang.excel.service.FileService;
 import com.yankaizhang.excel.service.MongoService;
-import com.yankaizhang.excel.util.Result;
+import com.yankaizhang.excel.response.Result;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +19,8 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 @Controller
+@Scope("prototype")
+@Slf4j
 public class ExcelController {
 
     @Autowired
@@ -30,9 +35,9 @@ public class ExcelController {
     @RequestMapping("/preEx")
     @ResponseBody
     public Result insertExcelFile(@RequestParam("f") String filename){
-
-        if (!fileService.exist(filename)){
-            return Result.buildError("待导入文件不存在：" + filename);
+        FileInfo fileInfo = fileService.selectBySaveName(filename);
+        if (fileInfo == null){
+            return Result.buildError("待导入文件记录不存在：" + filename);
         }
 
         File dir = new File(uploadPath);
@@ -45,17 +50,11 @@ public class ExcelController {
             return Result.buildError("待导入文件实际不存在：" + filename);
         }
 
-        Boolean result = null;
+        Boolean result;
 
         if (filename.endsWith("xls")){
+
             fileService.updateFileStatus(filename, FileStatusConstant.DOING_INSERT);
-
-            try {
-                TimeUnit.SECONDS.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
             result = mongoService.parseExcel(target, ExcelConstant.XLS);
 
         }else if (filename.endsWith("xlsx")){
@@ -71,6 +70,7 @@ public class ExcelController {
             return Result.buildSuccess("文件导入成功：" + filename);
         }else {
             fileService.updateFileStatus(filename, FileStatusConstant.FAILED_INSERT);
+            log.debug("失败文件: " + filename);
             return Result.buildError("文件导入失败：" + filename);
         }
 

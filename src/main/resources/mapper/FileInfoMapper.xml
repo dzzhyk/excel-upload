@@ -10,6 +10,14 @@
          `id`, `true_name`, `save_name`, `size`, `type`, `created`, `path`, `url`, `file_md5`, `status`, `del_flag`
     </sql>
 
+    <update id="updateFileStatus">
+        UPDATE
+        <include refid="BASE_TABLE"/>
+        SET `status` = #{status}
+        WHERE
+        `save_name` = #{filename};
+    </update>
+
     <delete id="deleteBySaveName">
         DELETE FROM
         <include refid="BASE_TABLE"/>
@@ -30,6 +38,13 @@
         FROM
         <include refid="BASE_TABLE"/>
         WHERE `save_name` = #{filename};
+    </select>
+
+    <select id="selectFileInfoVo" resultType="com.yankaizhang.excel.vo.FileInfoVO">
+        SELECT
+        `true_name` as `trueName`, `save_name` as `saveName`, `file_md5` as fileMd5, `size` as `fileSize`, `created`, `status`
+        FROM
+        <include refid="BASE_TABLE"/>
     </select>
 
 </mapper>

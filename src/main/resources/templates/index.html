@@ -13,91 +13,126 @@
 
     <h1>Excel文件上传</h1>
 
-    <div style="margin-top: 10px">
-        <span id="file-upload">上传Excel文件</span>
+    <div id="file-upload">上传Excel文件</div>
+
+    <hr>
+
+    <div class="layui-row layui-col-space10">
+
+        <div class="layui-col-md8">
+            <h2>服务器文件</h2>
+            <table id="file-table" lay-filter="file-list"></table>
+        </div>
+
+        <div  class="layui-col-md4">
+            <h2>上传队列</h2>
+            <table class="layui-table">
+                <colgroup>
+                    <col width="150">
+                    <col width="150">
+                    <col width="200">
+                    <col width="150">
+                </colgroup>
+                <thead>
+                <tr>
+                    <th>文件名称</th>
+                    <th>开始时间</th>
+                    <th>上传进度</th>
+                    <th>上传状态</th>
+                </tr>
+                </thead>
+                <tbody id="upload-queue">
+
+                </tbody>
+            </table>
+
+
+            <button type="button" class="layui-btn layui-bg-blue" id="file-start">开始上传</button>
+            <button type="button" class="layui-btn btn-primary" id="file-clear">清空队列</button>
+
+        </div>
+
     </div>
-    <p id="msg" style="color: red; margin-top: 10px;"></p>
-
-    <h2>服务器文件</h2>
-
-    <table class="layui-table">
-        <colgroup>
-            <col th:width="150">
-            <col th:width="200">
-            <col th:width="100">
-            <col th:width="100">
-            <col th:width="100">
-            <col th:width="200">
-        </colgroup>
-        <thead>
-        <tr>
-            <th>原始文件</th>
-            <th>服务器文件</th>
-            <th>文件大小(KB)</th>
-            <th>创建时间</th>
-            <th>文件状态</th>
-            <th>文件操作</th>
-        </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-
-
-    <h2>上传队列</h2>
-
-
-
-    <table class="layui-table">
-        <colgroup>
-            <col width="150">
-            <col width="150">
-            <col width="200">
-            <col width="100">
-        </colgroup>
-        <thead>
-            <tr>
-                <th>文件名称</th>
-                <th>开始时间</th>
-                <th>上传进度</th>
-                <th>上传状态</th>
-            </tr>
-        </thead>
-        <tbody id="upload-queue">
-
-        </tbody>
-    </table>
-
-
-    <button type="button" class="layui-btn layui-bg-blue" id="file-start">开始上传</button>
-    <button type="button" class="layui-btn btn-primary" id="file-clear">清空队列</button>
-
-    <button onclick="window.location.href='/index'" type="button" class="layui-btn layui-btn-primary">
-        <i class="layui-icon">&#xe9aa;</i>
-    </button>
 
 </div>
 
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <script th:src="@{/static/layui/layui.js}" charset="utf-8"></script>
-<script type="text/javascript" th:src="@{/static/webuploader/webuploader.js}"></script>
+<script type="text/javascript" th:src="@{/static/webuploader/webuploader.nolog.js}"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+
+
+<script type="text/html" id="toolbar">
+    <button onclick="reloadTable();" type="button" class="layui-btn layui-btn-primary">
+        <i class="layui-icon">&#xe9aa;</i>
+    </button>
+</script>
 
 <script>
 
     let element;
-
-    layui.use(['upload', 'element'], function() {
+    let $tablelns;
+    layui.use(['upload', 'element', 'table'], function() {
 
         element = layui.element;
-        let bar = $("#bar");
+        let table = layui.table;
 
+        // 动态表格实例
+        $tablelns = table.render({
+            elem: '#file-table'
+            ,height: 600
+            ,url: '/list'
+            ,method: 'post'
+            ,page: {
+                limit: 20
+            }
+            ,toolbar: "#toolbar"
+            ,cols: [
+                [
+                    {field: 'trueName', title: '原始文件', sort: true}
+                    ,{field: 'fileMd5', title: 'MD5值'}
+                    ,{field: 'fileSize', title: '文件大小', sort: true, templet: function (data) {
+                        return WebUploader.formatSize(data.fileSize, ['B', 'KB', 'MB']);
+                    }, width: 150}
+                    ,{field: 'created', title: '创建时间', sort: true, width: 120}
+                    ,{field: 'status', title: '文件状态', templet: function (data) {
+                        if (data.status === -1){
+                            return '<span class="layui-badge layui-bg-black">等待导入</span>';
+                        }else if (data.status === 0){
+                            return '<span class="layui-badge layui-bg-blue">导入中</span>';
+                        }else if (data.status === 1){
+                            return '<span class="layui-badge layui-bg-green">导入成功</span>';
+                        }else if (data.status === 2){
+                            return '<span class="layui-badge layui-bg-red">导入失败</span>';
+                        }
+                    }, width: 100}
+                    ,{field: 'ops', title: '文件操作', sort: false, templet: function (data) {
+                        if (data.status <= 0){
+                            return "暂无";
+                        }
+                        var str = '<div class="layui-btn-container layui-icon-align-center">\n';
+                        if (data.status === 1){
+                            str +='<button type="button" onclick="toShow(\''+data.saveName+'\')" class="layui-btn layui-btn-xs">在线预览Excel</button>\n'
+                        }else if (data.status === 2){
+                            str +='<button type="button" onclick="toInsert(\''+data.saveName+'\')" class="layui-btn layui-btn-xs layui-bg-orange">尝试重新导入</button>\n'
+                        }
+                        str +=
+                            '  <button type="button" onclick="toDownload(\''+data.saveName+'\')" class="layui-btn layui-btn-xs layui-bg-gray">下载文件</button>\n' +
+                            '  <button type="button" onclick="toDel(\''+data.saveName+'\')" class="layui-btn layui-btn-xs layui-bg-red">删除文件</button>\n' +
+                            '</div>';
+                        return str;
+                    }}
+                ]
+            ]
+        });
     });
+
 
     $(function () {
 
         let fileCheckUrl = "/checkFile";
         let checkChunkUrl = "/checkChunk";
-        let mergeChunksUrl = "/mergeChunk";
+        let mergeChunkUrl = "/mergeChunk";
 
         // 监控文件上传的三个时间点
         // 时间点1：监听所有分块进行上传之前（1.计算文件的唯一标记; 2.判断是否秒传）
@@ -120,7 +155,7 @@
                 }).then( function( md5 ){
 
                     // 给文件对象保存MD5信息
-                    file.fileMd5 = md5;
+                    file.fileMd5 = md5 + CryptoJS.MD5(file.name);
 
                     // 请求后台询问是否保存过该文件，如果存在则跳过该文件，实现秒传
                     $.ajax({
@@ -134,10 +169,10 @@
                                 //如果存在，则跳过该文件，实现秒传
                                 if(res.code === 1){
                                     element.progress('bar-'+file.id, '100%');
-                                    changeStatus(file.id, "layui-bg-black", "layui-bg-orange", "文件已存在，秒传成功");
+                                    changeStatus(file.id, "layui-bg-black", "layui-bg-orange", "秒传");
                                     uploader.skipFile(file);
-                                    // deferred.reject();
-                                    setInterval(function () {
+                                    deferred.reject();
+                                    setTimeout(function () {
                                         removeItem(file.id);
                                     }, 2000);
                                     console.log("文件秒传成功: ", file.name);
@@ -157,28 +192,24 @@
 
             //时间点2：如果是分块上传，监听每个分块上传之前
             beforeSend:function( block ){
-                //1.请求后台是否保存过当前分块，如果存在，则跳过该分块文件，实现断点续传功能
                 var deferred = WebUploader.Deferred();
-                //请求后台是否保存完成该文件信息，如果保存过，则跳过，如果没有，则发送该分块内容
+                // 请求后台是否保存完成该文件信息，如果保存过则跳过，如果没有，则发送该分块内容
                 $.ajax({
                         type: "POST",
                         url: checkChunkUrl,
                         data:{
-                            //文件MD5
-                            fileMd5: block.file.fileMd5,
-                            //当前分块下标
-                            chunk: block.chunk,
-                            //当前分块大小
-                            chunkSize: block.end - block.start
+                            fileMd5: block.file.fileMd5,    // 文件MD5
+                            chunk: block.chunk,  //当前分块下标
+                            fileSize: block.blob.size
                         },
                         dataType:"json",
                         success:function(response){
+                            //分块存在，跳过该分块
                             if(response.success){
-                                //分块存在，跳过该分块
                                 uploader.skipFile()
                                 // deferred.reject();
+                                console.log("文件:", block.file.name, "分块: ", block.chunk, "大小: ", block.chunkSize, "已经存在");
                             }else{
-                                //分块不存在或者不完整，重新发送该分块内容
                                 deferred.resolve();
                             }
                         }
@@ -194,18 +225,19 @@
                 //通知后台合并文件
                 $.ajax({
                     type: "POST",
-                    url: mergeChunksUrl,
+                    url: mergeChunkUrl,
                     data:{
-                        //文件唯一标记
                         fileMd5: file.fileMd5,
-                        //文件名称
-                        fileName: file.name
+                        fileName: file.name,
+                        fileSize: file.size
                     },
                     dataType:"json",
                     success:function(res){
-
-                        console.log("合并分片完成: ", file.name, "res: ", res);
-
+                        // 如果合并成功，尝试通知文件进行Excel导入
+                        if(res.code === 1){
+                            toInsert(res.data);
+                            console.log("合并分片完成: ", file.name, "res: ", res);
+                        }
                     }
                 });
             }
@@ -217,7 +249,7 @@
             // swf文件路径， 需要修改为你自己存放的路径
             swf: '/static/webuploader/Uploader.swf',
             // 文件接收服务端。  // 需要修改为你的后端地址
-            server: '/upload',
+            server: '/uploadChunk',
             // dnd 指定Drag And Drop拖拽的容器，如果不指定，则不启动
             // 禁用全局拖拽，否则在没有启动拖拽容器的情况下，视频拖进来后会直接在浏览器内播放。
             disableGlobalDnd: true,
@@ -244,39 +276,22 @@
             // 可选，是否要分片处理大文件上传
             chunked: true,
 
-            // 如果要分片，分多大一片？这里我设置为2M, 如需更大值，可能需要需修改php.ini等配置
-            chunkSize:2*1024*1024,
+            // 分块大小
+            chunkSize:5*1024*1024,
 
             // 如果某个分片由于网络问题出错，允许自动重传多少次
             chunkRetry: 3,
 
             // 上传并发数，允许同时上传最大进程数，默认3
-            threads:5,
-
-            // post中的表单数据，可自定义字段。
-            formData: {
-
-            },
-
-            // 验证文件总数量, 超出10个文件则不允许加入队列。
-            fileNumLimit: 10,
-
-            // 验证文件总大小是否超出限制（8G）, 超出则不允许加入队列。根据需要进行设置。除了前面几个，其它都是可选项
-            fileSizeLimit: 1024*1024*1024*8,
-
-            // 验证单个文件大小是否超出限制（2G）, 超出则不允许加入队列。
-            fileSingleSizeLimit: 1024*1024*1024*2,
-
+            threads:3,
+            // 验证文件总数量, 超出5个文件则不允许加入队列。
+            fileNumLimit: 5,
+            // 验证文件总大小是否超出限制（2G）
+            fileSizeLimit: 1024*1024*1024*2,
+            // 验证单个文件大小是否超出限制（400MB）
+            fileSingleSizeLimit: 1024*1024*400,
             // 去重根据文件名字、文件大小和最后修改时间来生成hash Key.
-            duplicate: true,
-
-            // 不压缩image, 默认如果是jpeg，文件上传前会压缩一把再上传！
-            // resize: false,
-            // 压缩选项
-            // compress: {
-            //     // 如果压缩后比源文件大，则不压缩，图片有可能压缩后比原文件还大，需设置此项
-            //     noCompressIfLarger: true,
-            // },
+            duplicate: true
         });
 
 
@@ -294,20 +309,15 @@
                     element.progress('demo', Math.round(percentage * 100)  + '%');
                 })
                 .then(function(md5) {
-                    // 将md5值加入到post的表单数据formData中， 与上文中的 context 和 from字段相同
-                    uploader.option("formData",{
-                        ...{"fileMd5": md5}
-                    });
                     console.log('filename:', file.name, 'md5:', md5);
                 });
         });
 
-        // 上传之前
-        uploader.on('uploadBeforeSend', function( block, data, headers ) {
+        // 分块上传之前，这里添加参数信息
+        uploader.on('uploadBeforeSend', function( block, data ) {
             data.fileMd5 = block.file.fileMd5;
-            // block.file.chunks = block.chunks
-            data.chunks = block.file.chunks;
-            console.log("fileMd5: ", data.fileMd5, "chunks: ", data.chunks);
+            data.chunk = block.chunk;
+            console.log("fileMd5: ", data.fileMd5, "chunks: ", data.chunk);
         });
 
         // 文件上传过程中
@@ -324,22 +334,23 @@
             }else if(type==="Q_EXCEED_SIZE_LIMIT"){
                 alert("所有的文件大小总和不能超过2048M");
             }else if(type==='F_EXCEED_SIZE'){
-                alert("单个文件大小不能超过1M");
+                alert("单个文件大小不能超过400M");
             }else if(type==='Q_EXCEED_NUM_LIMIT'){
-                alert(typeName+"最多只能上传10个");
+                alert("最多同时上传5个");
             }else if(type==='F_DUPLICATE'){
                 alert(file.name+"已经在上传队列，请勿重复上传");
             }else{
                 alert("上传出错");
             }
+            uploader.reset();
+            $('#upload-queue').empty();
         })
 
         // 上传成功
         uploader.on( 'uploadSuccess', function( file ) {
             console.log("上传成功" + file);
             changeStatus(file.id, "layui-bg-blue", "layui-bg-green", "上传成功");
-
-            setInterval(function () {
+            setTimeout(function () {
                 removeItem(file.id);
             }, 2000);
         });
@@ -350,9 +361,17 @@
             changeStatus(file.id, "layui-bg-blue", "layui-bg-red", "上传失败");
         });
 
-        // 上传完成，不论失败还是成功
+        // 单个上传完成，不论失败还是成功
         uploader.on( 'uploadComplete', function( file ) {
             console.log("上传结束");
+        });
+
+        // 全部上传完成
+        uploader.on("uploadFinished", function (file) {
+            $('#upload-queue').empty();
+            uploader.reset();
+            console.log("清除上传队列");
+            reloadTable();
         });
 
 
@@ -370,6 +389,9 @@
             uploader.retry(); // 重新上传
         })
 
+        setInterval(function () {
+            reloadTable();
+        }, 10000);
     })
 
     // 添加文件上传队列元素
@@ -379,7 +401,7 @@
         let queue = $("#upload-queue");
         queue.append("<tr id='tr-"+id+"'>\n" +
         "                <td>"+filename+"</td>\n" +
-        "                <td>"+ new Date().toLocaleDateString() +"</td>\n" +
+        "                <td>"+ new Date().toLocaleTimeString() +"</td>\n" +
         "                <td><div class='layui-progress' lay-filter='bar-"+id+"' lay-showPercent='yes'><div class='layui-progress-bar' lay-percent='0%'></div></div></td>\n" +
         "                <td><span id='badge-"+id+"' class='layui-badge layui-bg-black'>等待上传</span></td>\n" +
         "            </tr>"
@@ -408,9 +430,10 @@
         let $ = layui.jquery;
         $.ajax({
             url: "/delete?f="+filename,
-            method: "post",
+            type: "POST",
             success: function (res) {
-                window.location.href = '/index';
+                console.log(res);
+                reloadTable();
             }
         })
     }
@@ -419,16 +442,19 @@
         let $ = layui.jquery;
         $.ajax({
             url: "/preEx?f="+filename,
-            method: "post",
+            type: "POST",
             success: function (res) {
-                if (res !== null){
-                    window.location.href = '/index';
-                }
+                console.log(res);
             },
             error: function (res) {
                 alert("未知错误");
             }
         })
+    }
+
+    // 刷新服务器表格
+    function reloadTable() {
+        $tablelns.reload();
     }
 
 </script>

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 @Slf4j
@@ -35,58 +36,35 @@ public class MongoServiceImpl implements MongoService {
     private String uploadPath;
 
     @Override
-    public Boolean parseExcel(File file, ExcelConstant type) {
+    public synchronized Boolean parseExcel(File file, ExcelConstant type) {
 
         if (!file.exists()){
             log.warn("待解析parse文件不存在");
             return false;
         }
 
-        Future<Boolean> booleanFuture = ThreadUtil.execAsync(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-
-                // 创建Collection
-                MongoCollection<Document> collection = mongoTemplate.createCollection(file.getName());
-
-                if (ExcelConstant.XLS == type) {
-                    try {
-                        xlsReader.read(file, -1);
-                    }catch (Exception e){
-                        e.printStackTrace();
-                        return false;
-                    }
-                    return true;
-                } else if (ExcelConstant.XLSX == type) {
-                    try {
-                        xlsxReader.read(file, -1);
-                    }catch (Exception e){
-                        e.printStackTrace();
-                        return false;
-                    }
-                    return true;
+        if (ExcelConstant.XLS == type) {
+            try {
+                if (file.exists()){
+                    xlsReader.read(file, -1);
                 }
-
-                log.warn("未知excel类型");
+                return true;
+            }catch (Exception e){
+                e.printStackTrace();
                 return false;
             }
-        });
-
-        try {
-            return booleanFuture.get(300, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            log.warn("处理excel被迫中断");
-            return false;
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-            log.warn("处理excel过程错误");
-            return false;
-        } catch (TimeoutException e) {
-            e.printStackTrace();
-            log.warn("处理excel超时");
-            return false;
+        } else if (ExcelConstant.XLSX == type) {
+            try {
+                if (file.exists()){
+                    xlsxReader.read(file, -1);
+                }
+                return true;
+            }catch (Exception e){
+                e.printStackTrace();
+                log.debug(file.getName());
+                return false;
+            }
         }
-
+        return false;
     }
 }

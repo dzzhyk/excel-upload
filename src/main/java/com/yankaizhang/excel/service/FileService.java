@@ -1,15 +1,21 @@
 package com.yankaizhang.excel.service;
 
-import com.yankaizhang.excel.util.Result;
-import org.springframework.web.multipart.MultipartFile;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.yankaizhang.excel.entity.FileInfo;
+import com.yankaizhang.excel.vo.FileInfoVO;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author dzzhyk
  */
 public interface FileService {
+
+    /**
+     * 加入文件记录
+     */
+    Integer insertFile(FileInfo fileInfo);
 
     /**
      * 下载文件
@@ -22,17 +28,25 @@ public interface FileService {
      * 删除文件
      * @param filename 服务器文件名称
      */
-    void deleteFile(String filename);
+    Integer deleteFile(String filename);
 
     /**
      * 更新文件状态
      * @param filename 服务器文件名称
      * @param status 更新状态
      */
-    void updateFileStatus(String filename, int status);
+    Integer updateFileStatus(String filename, int status);
 
-    /**
-     * 根据md5查找是否有文件记录
-     */
-    boolean exist(String md5);
+    String getUploadPath();
+
+    String getChunkPath();
+
+    IPage<FileInfoVO> selectFileInfoPage(Page<FileInfoVO> page);
+
+    FileInfo selectBySaveName(String filename);
+
+    FileInfo selectByMd5(String fileMd5);
+
+    Long selectCount();
+
 }

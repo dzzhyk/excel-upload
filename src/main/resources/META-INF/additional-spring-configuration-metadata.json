@@ -9,6 +9,11 @@
       "name": "excel.save-path",
       "type": "java.lang.String",
       "description": "excel.save-path."
+    },
+    {
+      "name": "excel.chunk-path",
+      "type": "java.lang.String",
+      "description": "excel.chunk-path."
     }
   ]
 }
