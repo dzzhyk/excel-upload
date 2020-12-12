@@ -25,7 +25,7 @@
         </div>
 
         <div  class="layui-col-md4">
-            <h2>上传队列</h2>
+            <h2>上传队列<i id="loading" style="margin-left: 10px;" class="layui-icon layui-anim-rotate layui-anim-loop">&#xe9aa;</i></h2>
             <table class="layui-table">
                 <colgroup>
                     <col width="150">
@@ -107,14 +107,17 @@
                         }
                     }, width: 100}
                     ,{field: 'ops', title: '文件操作', sort: false, templet: function (data) {
-                        if (data.status <= 0){
-                            return "暂无";
+                        if (data.status === 0){
+                            return "等待Excel文件导入完成..."
                         }
+
                         var str = '<div class="layui-btn-container layui-icon-align-center">\n';
-                        if (data.status === 1){
+                        if (data.status === -1){
+                            str += '<button type="button" onclick="toInsert(\''+data.saveName+'\', this)" class="layui-btn layui-btn-xs layui-bg-blue">导入Excel数据</button>\n';
+                        } else if (data.status === 1){
                             str +='<button type="button" onclick="toShow(\''+data.saveName+'\')" class="layui-btn layui-btn-xs">在线预览Excel</button>\n'
                         }else if (data.status === 2){
-                            str +='<button type="button" onclick="toInsert(\''+data.saveName+'\')" class="layui-btn layui-btn-xs layui-bg-orange">尝试重新导入</button>\n'
+                            str +='<button type="button" onclick="toInsert(\''+data.saveName+'\', this)" class="layui-btn layui-btn-xs layui-bg-orange">尝试重新导入</button>\n'
                         }
                         str +=
                             '  <button type="button" onclick="toDownload(\''+data.saveName+'\')" class="layui-btn layui-btn-xs layui-bg-gray">下载文件</button>\n' +
@@ -162,7 +165,7 @@
                             type: "POST",
                             url: fileCheckUrl,
                             data: {
-                                fileMd5: md5
+                                fileMd5: file.fileMd5
                             },
                             dataType:"json",
                             success:function(res){
@@ -171,7 +174,7 @@
                                     element.progress('bar-'+file.id, '100%');
                                     changeStatus(file.id, "layui-bg-black", "layui-bg-orange", "秒传");
                                     uploader.skipFile(file);
-                                    deferred.reject();
+                                    // deferred.reject();
                                     setTimeout(function () {
                                         removeItem(file.id);
                                     }, 2000);
@@ -179,8 +182,8 @@
                                 }else{
                                     //继续上传
                                     console.log("新文件需要上传: ", file.name);
-                                    deferred.resolve();
                                 }
+                                deferred.resolve();
                             }
                         }
                     );
@@ -235,7 +238,6 @@
                     success:function(res){
                         // 如果合并成功，尝试通知文件进行Excel导入
                         if(res.code === 1){
-                            // toInsert(res.data);
                             console.log("合并分片完成: ", file.name, "res: ", res);
                         }
                     }
@@ -278,10 +280,8 @@
 
             // 分块大小
             chunkSize:5*1024*1024,
-
             // 如果某个分片由于网络问题出错，允许自动重传多少次
             chunkRetry: 3,
-
             // 上传并发数，允许同时上传最大进程数，默认3
             threads:3,
             // 验证文件总数量, 超出5个文件则不允许加入队列。
@@ -290,27 +290,16 @@
             fileSizeLimit: 1024*1024*1024*2,
             // 验证单个文件大小是否超出限制（400MB）
             fileSingleSizeLimit: 1024*1024*400,
-            // 去重根据文件名字、文件大小和最后修改时间来生成hash Key.
-            duplicate: true
+            // 不允许重复上传
+            duplicate: false,
+            timeout: 10000,
         });
 
 
         // 文件被添加进队列
         uploader.on( 'fileQueued', function( file ) {
-
             // 添加文件上传队列元素
             addItem(file.id, file.name);
-
-            // 生成文件的MD5值， 可以用来实现秒传， 如不需要，可以忽略
-            // 数据库中保存md5值，如果存在相同md5，直接在文件服务器复制一份，不需再次分片上传以及合并，极快
-            uploader.md5File( file )
-                // 显示进度
-                .progress(function(percentage) {
-                    element.progress('demo', Math.round(percentage * 100)  + '%');
-                })
-                .then(function(md5) {
-                    console.log('filename:', file.name, 'md5:', md5);
-                });
         });
 
         // 分块上传之前，这里添加参数信息
@@ -348,6 +337,8 @@
 
         // 上传成功
         uploader.on( 'uploadSuccess', function( file ) {
+
+            uploader.removeFile(file);
             console.log("上传成功" + file);
             changeStatus(file.id, "layui-bg-blue", "layui-bg-green", "上传成功");
             setTimeout(function () {
@@ -357,7 +348,7 @@
 
         // 上传失败
         uploader.on( 'uploadError', function( file ) {
-            console.log("上传失败: " + file);
+            console.log("上传失败: ", file);
             changeStatus(file.id, "layui-bg-blue", "layui-bg-red", "上传失败");
         });
 
@@ -371,22 +362,24 @@
             $('#upload-queue').empty();
             uploader.reset();
             console.log("清除上传队列");
+            $('#file-start').removeClass("layui-btn-disabled");
+            $('#loading').removeClass("layui-anim");
             reloadTable();
         });
-
 
         // 上传相关按钮绑定事件
         $('#file-start').click(function(){
             uploader.upload(); // 开始上传
+            // 暂时禁用按钮
+            $('#file-start').addClass("layui-btn-disabled");
+            $('#loading').addClass("layui-anim");
         })
+
         $('#file-clear').click(function() {
             // 清空队列
             $('#upload-queue').empty();
             uploader.reset();
             console.log("清除上传队列");
-        })
-        $('#file-retry').click(function(){
-            uploader.retry(); // 重新上传
         })
 
         setInterval(function () {
@@ -438,8 +431,9 @@
         })
     }
 
-    function toInsert(filename) {
+    function toInsert(filename, btn) {
         let $ = layui.jquery;
+        $(btn).remove();
         $.ajax({
             url: "/preEx?f="+filename,
             type: "POST",

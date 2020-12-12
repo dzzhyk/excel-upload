@@ -23,8 +23,8 @@ import java.util.concurrent.locks.ReentrantLock;
 @Scope("prototype")
 public class MongoServiceImpl implements MongoService {
 
-    @Autowired
-    MongoTemplate mongoTemplate;
+//    @Autowired
+//    MongoTemplate mongoTemplate;
 
     @Autowired
     Excel03SaxReader xlsReader;

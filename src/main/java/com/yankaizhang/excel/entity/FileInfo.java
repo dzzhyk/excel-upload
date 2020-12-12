@@ -1,11 +1,9 @@
 package com.yankaizhang.excel.entity;
 
+import com.yankaizhang.excel.entity.primaryKey.FileInfoPrimaryKey;
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Date;
 
 /**
@@ -17,9 +15,11 @@ import java.util.Date;
 @ToString
 @Entity
 @Table(name = "file_info")
+@IdClass(FileInfoPrimaryKey.class)
 public class FileInfo {
 
     @Id
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "true_name")
@@ -55,6 +55,7 @@ public class FileInfo {
     /**
      * 文件MD5信息
      */
+    @Id
     @Column(name = "file_md5")
     private String fileMd5;
 

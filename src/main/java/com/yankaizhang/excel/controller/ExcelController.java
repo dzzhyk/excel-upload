@@ -19,7 +19,7 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 @Controller
-@Scope("prototype")
+//@Scope("prototype")
 @Slf4j
 public class ExcelController {
 
@@ -34,7 +34,7 @@ public class ExcelController {
 
     @RequestMapping("/preEx")
     @ResponseBody
-    public Result insertExcelFile(@RequestParam("f") String filename){
+    public synchronized Result insertExcelFile(@RequestParam("f") String filename){
         FileInfo fileInfo = fileService.selectBySaveName(filename);
         if (fileInfo == null){
             return Result.buildError("待导入文件记录不存在：" + filename);

@@ -7,6 +7,7 @@ import com.yankaizhang.excel.entity.FileInfo;
 import com.yankaizhang.excel.mapper.FileInfoMapper;
 import com.yankaizhang.excel.service.FileService;
 import com.yankaizhang.excel.vo.FileInfoVO;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
@@ -55,6 +56,9 @@ public class FileServiceImpl implements FileService {
 
         try (OutputStream os = response.getOutputStream()) {
             Files.copy(path, os);
+        }catch (ClientAbortException e){
+            // 中断了下载
+
         }catch (Exception e){
             e.printStackTrace();
         }

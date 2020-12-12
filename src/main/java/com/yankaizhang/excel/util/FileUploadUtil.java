@@ -117,8 +117,6 @@ public class FileUploadUtil {
      */
     public static boolean checkFileMd5(File mergeFile, String trueName, String fileMd5) {
         String md5 = SecureUtil.md5(mergeFile) + SecureUtil.md5(trueName);
-        System.out.println("md5 " + md5);
-        System.out.println("fileMd5 " + fileMd5);
         return md5.equals(fileMd5);
     }
 

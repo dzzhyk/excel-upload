@@ -36,7 +36,7 @@ public class ExcelConfig {
         return new RowHandler() {
             @Override
             public void handle(int sheetIndex, long rowIndex, List<Object> rowlist) {
-                Console.log("[{}] [{}] {}", sheetIndex, rowIndex, rowlist);
+//                Console.log("[{}] [{}] {}", sheetIndex, rowIndex, rowlist);
             }
         };
     }
