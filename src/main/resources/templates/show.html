@@ -2,44 +2,100 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>上传表格数据展示页面</title>
+    <title th:text="${filename}"></title>
     <link rel="stylesheet" th:href="@{/static/layui/css/layui.css}"  media="all">
 </head>
+
+
 <body>
-    <table id="demo" lay-filter="test"></table>
 
 
-    <script th:src="@{/static/layui/layui.js}" charset="utf-8"></script>
-    <script>
-        layui.use('table', function(){
+    <div style="margin: 10px">
+        <h3>文件信息</h3>
+        <table class="layui-table" lay-size="sm">
+            <thead>
+            <tr>
+                <th>存储id</th>
+                <th>MD5值</th>
+                <th>path</th>
+                <th>原文件名称</th>
+                <th>存储名称</th>
+                <th>文件大小</th>
+                <th>文件状态</th>
+                <th>类型</th>
+                <th>url</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>[[${fileInfo.id}]]</td>
+                <td>[[${fileInfo.fileMd5}]]</td>
+                <td>[[${fileInfo.path}]]</td>
+                <td>[[${fileInfo.trueName}]]</td>
+                <td>[[${fileInfo.saveName}]]</td>
+                <td>[[${fileInfo.size}]]</td>
+                <td>[[${fileInfo.status}]]</td>
+                <td>[[${fileInfo.type}]]</td>
+                <td>[[${fileInfo.url}]]</td>
+            </tr>
+            </tbody>
+        </table>
 
-            let table = layui.table;
-            let $ = layui.jquery;
+        <hr>
 
-            $.ajax({
+        <table class="layui-table" lay-size="sm">
+            <tbody id="excel-tbody">
+            <tr><td>行号</td></tr>
+            </tbody>
+        </table>
+        <div id="pager"></div>
+    </div>
 
-            })
 
-            //第一个实例
-            table.render({
-                elem: '#demo'
-                ,height: 312
-                ,url: '/demo/table/user/' //数据接口
-                ,page: true //开启分页
-                ,cols: [[ //表头
-                    {field: 'id', title: 'ID', width:80, sort: true, fixed: 'left'},
-                    {field: 'username', title: '用户名', width:80},
-                    {field: 'sex', title: '性别', width:80, sort: true},
-                    {field: 'city', title: '城市', width:80},
-                    {field: 'sign', title: '签名', width: 177},
-                    {field: 'experience', title: '积分', width: 80, sort: true},
-                    {field: 'score', title: '评分', width: 80, sort: true},
-                    {field: 'classify', title: '职业', width: 80},
-                    {field: 'wealth', title: '财富', width: 135, sort: true}]]
-            });
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script th:src="@{/static/layui/layui.js}" charset="utf-8"></script>
+<script>
+    console.log("filename: [[${filename}]]", "lines: [[${lines}]]");
 
+    layui.use(['table', 'laypage'], function(){
+        let laypage = layui.laypage;
+
+        //执行一个laypage实例
+        laypage.render({
+            elem: 'pager' //注意，这里的 test1 是 ID，不用加 # 号
+            ,count: [[${lines}]] //数据总数，从服务端得到
+            ,limit: 20
+            ,jump: function(obj, first){
+                flushTable(obj)
+            }
         });
-    </script>
 
+    });
+
+    function flushTable(obj) {
+        let table = layui.table;
+        $('#excel-tbody').empty();
+        console.log(obj.curr, obj.limit);
+        $.ajax({
+            url: "/getEx/[[${collectionName}]]/0/"+obj.curr+"/"+obj.limit,
+            type: "POST",
+            success: function (res) {
+                console.log(res);
+                var str = '';
+                let ls = res.data
+                for (let i=0; i<ls.length; i++){
+                    let temp = ls[i].rowList;
+                    str += '<tr><td>'+(ls[i].row+1)+'</td>';
+                    for (let j=0; j<temp.length; j++){
+                        str += '<td>'+temp[j]+'</td>'
+                    }
+                    str += '</tr>';
+                }
+                $('#excel-tbody').append(str);
+            }
+        })
+    }
+
+</script>
 </body>
 </html>

@@ -412,7 +412,14 @@
     }
 
     function toShow(filename) {
-        window.location.href = '/preview?f='+filename;
+        layer.open({
+            type: 2,
+            title: filename,
+            maxmin: true,
+            shadeClose: true, //点击遮罩关闭层
+            area : ['1600px' , '800px'],
+            content: '/preview?f='+filename,
+        });
     }
 
     function toDownload(filename) {
