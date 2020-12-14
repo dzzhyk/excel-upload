@@ -1,6 +1,5 @@
 package com.yankaizhang.excel.constant;
 
-import lombok.Data;
 import org.springframework.stereotype.Component;
 
 /**

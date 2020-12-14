@@ -6,7 +6,6 @@ import com.yankaizhang.excel.constant.ExcelConstant;
 import com.yankaizhang.excel.constant.FileStatusConstant;
 import com.yankaizhang.excel.entity.ExcelLine;
 import com.yankaizhang.excel.entity.FileInfo;
-import com.yankaizhang.excel.response.LayuiResult;
 import com.yankaizhang.excel.service.FileService;
 import com.yankaizhang.excel.service.MongoService;
 import com.yankaizhang.excel.response.Result;
@@ -83,10 +82,11 @@ public class ExcelController {
             }
         });
 
-        // 等待结果返回，60秒超时
+        // 等待结果返回，300秒超时
         try {
-            return resultFuture.get(60, TimeUnit.SECONDS);
+            return resultFuture.get(300, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            fileService.updateFileStatus(filename, FileStatusConstant.FAILED_INSERT);
             e.printStackTrace();
             return Result.buildError("处理操作超时");
         }

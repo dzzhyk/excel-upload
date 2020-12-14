@@ -8,24 +8,27 @@ import cn.hutool.poi.excel.sax.handler.RowHandler;
 import com.mongodb.client.MongoCollection;
 import com.yankaizhang.excel.constant.ExcelConstant;
 import com.yankaizhang.excel.entity.ExcelLine;
+import com.yankaizhang.excel.entity.ExcelLinePage;
 import com.yankaizhang.excel.service.MongoService;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregationOptions;
 
 @Service
 @Slf4j
@@ -99,11 +102,20 @@ public class MongoServiceImpl implements MongoService {
 
     @Override
     public List<ExcelLine> getExcelLinesPage(String collectionName, Integer sheet, Integer curr, Integer size) {
-        Query query = new Query(Criteria.where("sheet").is(sheet))
-                .with(Sort.by("row"))
-                .skip((curr-1) * size)
-                .limit(size);
-        List<ExcelLine> excelLineList = mongoTemplate.find(query, ExcelLine.class, collectionName);
+        long start = System.currentTimeMillis();
+        Query query = new Query(Criteria.where("sheet").is(sheet)).with(new ExcelLinePage(curr, size, Sort.by("row")));
+//        ArrayList<AggregationOperation> operations = new ArrayList<>(4);
+//        operations.add(Aggregation.match(Criteria.where("sheet").is(sheet)));
+//        operations.add(Aggregation.sort(Sort.by("row")));
+//        operations.add(Aggregation.skip((curr-1) * size));
+//        operations.add(Aggregation.limit(size));
+//        Aggregation aggregation = Aggregation.newAggregation(operations).withOptions(newAggregationOptions().
+//                allowDiskUse(true).build());
+//        AggregationResults<ExcelLine> aggregate = mongoTemplate.aggregate(aggregation, collectionName, ExcelLine.class);
+//        List<ExcelLine> excelLineList = aggregate.getMappedResults();
+        List<ExcelLine> excelLineList = mongoTemplate.find(query, ExcelLine.class,  collectionName);
+        long end = System.currentTimeMillis();
+        log.info("sheet: " + sheet + ", curr: "+curr+", size: "+ size +" 查询时长: " + (end-start) +" ms");
         return excelLineList;
     }
 

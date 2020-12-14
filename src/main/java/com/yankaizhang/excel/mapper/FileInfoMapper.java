@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yankaizhang.excel.entity.FileInfo;
 import com.yankaizhang.excel.vo.FileInfoVO;
 
-import java.util.List;
 
 public interface FileInfoMapper extends BaseMapper<FileInfo> {
 
