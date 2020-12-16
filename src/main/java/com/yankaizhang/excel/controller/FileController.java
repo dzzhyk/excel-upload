@@ -4,7 +4,6 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.yankaizhang.excel.entity.ChunkInfo;
 import com.yankaizhang.excel.entity.FileInfo;
 import com.yankaizhang.excel.response.LayuiResult;
 import com.yankaizhang.excel.service.FileService;
@@ -18,11 +17,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 文件上传controller
@@ -182,7 +179,7 @@ public class FileController {
         fileInfo.setCreated(new Date());
         fileService.insertFile(fileInfo);
 
-        return Result.buildSuccess("", saveName);
+        return Result.buildSuccess("合并文件成功", saveName);
     }
 
     @GetMapping("/download")

@@ -93,7 +93,7 @@
                     ,{field: 'fileMd5', title: 'MD5值'}
                     ,{field: 'fileSize', title: '文件大小', sort: true, templet: function (data) {
                         return WebUploader.formatSize(data.fileSize, ['B', 'KB', 'MB']);
-                    }, width: 150}
+                    }, width: 100}
                     ,{field: 'created', title: '创建时间', sort: true, width: 120}
                     ,{field: 'status', title: '文件状态', templet: function (data) {
                         if (data.status === -1){
@@ -224,21 +224,22 @@
             },
 
             //时间点3：监听所有分块上传成功之后
-            afterSendFile:function(file){
+            afterSendFile:function( file ){
+                console.log('尝试通知合并文件：', file.name)
                 //通知后台合并文件
                 $.ajax({
-                    type: "POST",
                     url: mergeChunkUrl,
+                    type: "post",
                     data:{
                         fileMd5: file.fileMd5,
                         fileName: file.name,
                         fileSize: file.size
                     },
-                    dataType:"json",
                     success:function(res){
+                        console.log("获取了合并结果: ", res);
                         // 如果合并成功，尝试通知文件进行Excel导入
                         if(res.code === 1){
-                            console.log("合并分片完成: ", file.name, "res: ", res);
+                            console.log("合并分片完成: ", file.name);
                         }
                     }
                 });
@@ -284,8 +285,8 @@
             chunkRetry: 3,
             // 上传并发数，允许同时上传最大进程数，默认3
             threads:3,
-            // 验证文件总数量, 超出5个文件则不允许加入队列。
-            fileNumLimit: 5,
+            // 验证文件总数量, 超出10个文件则不允许加入队列。
+            fileNumLimit: 10,
             // 验证文件总大小是否超出限制（2G）
             fileSizeLimit: 1024*1024*1024*2,
             // 验证单个文件大小是否超出限制（400MB）
@@ -335,18 +336,14 @@
             $('#upload-queue').empty();
         })
 
-        // 上传成功
+        // 单个上传成功
         uploader.on( 'uploadSuccess', function( file ) {
-
             uploader.removeFile(file);
             console.log("上传成功" + file);
             changeStatus(file.id, "layui-bg-blue", "layui-bg-green", "上传成功");
-            setTimeout(function () {
-                removeItem(file.id);
-            }, 2000);
         });
 
-        // 上传失败
+        // 单个上传失败
         uploader.on( 'uploadError', function( file ) {
             console.log("上传失败: ", file);
             changeStatus(file.id, "layui-bg-blue", "layui-bg-red", "上传失败");
@@ -355,16 +352,16 @@
         // 单个上传完成，不论失败还是成功
         uploader.on( 'uploadComplete', function( file ) {
             console.log("上传结束");
+            reloadTable();
         });
 
         // 全部上传完成
         uploader.on("uploadFinished", function (file) {
             $('#upload-queue').empty();
-            uploader.reset();
+            // uploader.reset();
             console.log("清除上传队列");
             $('#file-start').removeClass("layui-btn-disabled");
             $('#loading').removeClass("layui-anim");
-            reloadTable();
         });
 
         // 上传相关按钮绑定事件
@@ -377,14 +374,11 @@
 
         $('#file-clear').click(function() {
             // 清空队列
-            $('#upload-queue').empty();
             uploader.reset();
-            console.log("清除上传队列");
+            $('#upload-queue').empty();
+            console.log("清除上传队列成功");
         })
 
-        setInterval(function () {
-            reloadTable();
-        }, 10000);
     })
 
     // 添加文件上传队列元素

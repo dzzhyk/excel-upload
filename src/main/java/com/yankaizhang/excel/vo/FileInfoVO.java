@@ -20,7 +20,7 @@ public class FileInfoVO {
 
     private String trueName;
     private String saveName;
-    private long fileSize;
+    private Long fileSize;
     private Date created;
     private String fileMd5;
 
