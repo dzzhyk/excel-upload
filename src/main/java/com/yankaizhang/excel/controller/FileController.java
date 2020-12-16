@@ -38,6 +38,10 @@ public class FileController {
         return "index";
     }
 
+    @RequestMapping("/uploadlist")
+    public String uploadList(){
+        return "uploadlist";
+    }
 
     @PostMapping("/list")
     @ResponseBody

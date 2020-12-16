@@ -1,5 +1,9 @@
 server:
     port: 8080
+    tomcat:
+        threads:
+            max: 100
+            min-spare: 20
 
 spring:
     datasource:
@@ -18,9 +22,12 @@ spring:
     data:
         # mongoDB配置
         mongodb:
-            host: 127.0.0.1
-            port: 27017
-            database: test
+            custom:
+                address: "mongodb://localhost:27017/test"
+                # 连接池大小
+                max-connections: 20
+                # 最小连接池大小
+                min-connections: 10
     thymeleaf:
         prefix: classpath:/templates/
         check-template-location: true
