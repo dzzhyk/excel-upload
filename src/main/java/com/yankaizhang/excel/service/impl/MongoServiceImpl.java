@@ -27,7 +27,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 @Service
@@ -97,11 +99,6 @@ public class MongoServiceImpl implements MongoService {
     }
 
     @Override
-    public Long getExcelLineCount(Integer sheet, String collectionName) {
-        return mongoTemplate.count(new Query(Criteria.where("sheet").is(sheet)), ExcelLine.class, collectionName);
-    }
-
-    @Override
     public List<ExcelLine> getExcelLinesPage(String collectionName, Integer sheet, Integer curr, Integer size) {
         long start = System.currentTimeMillis();
 
@@ -117,6 +114,17 @@ public class MongoServiceImpl implements MongoService {
         long end = System.currentTimeMillis();
         log.info("sheet: " + sheet + ", curr: "+curr+", size: "+ size +" 查询时长: " + (end-start) +" ms");
         return excelLineList;
+    }
+
+
+    @Override
+    public Integer getExcelSheetCount(String collectionName) {
+        return mongoTemplate.findDistinct(new Query(), "sheet", collectionName, ExcelLine.class, Integer.class).size();
+    }
+
+    @Override
+    public Long getExcelLineCountBySheet(String collectionName, Integer sheet) {
+        return mongoTemplate.count(new Query(Criteria.where("sheet").is(sheet)), ExcelLine.class, collectionName);
     }
 
 

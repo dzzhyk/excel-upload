@@ -2,6 +2,8 @@ package com.yankaizhang.excel.controller;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.thread.ThreadUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yankaizhang.excel.constant.ExcelConstant;
 import com.yankaizhang.excel.constant.FileStatusConstant;
 import com.yankaizhang.excel.entity.ExcelLine;
@@ -9,6 +11,7 @@ import com.yankaizhang.excel.entity.FileInfo;
 import com.yankaizhang.excel.service.FileService;
 import com.yankaizhang.excel.service.MongoService;
 import com.yankaizhang.excel.response.Result;
+import com.yankaizhang.excel.vo.ExcelPageVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,8 +21,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 @Controller
 @Scope("prototype")
@@ -36,6 +40,8 @@ public class ExcelController {
     private String uploadPath;
 
     private static final ExecutorService executor = ThreadUtil.newExecutor(10);
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/preEx")
     @ResponseBody
@@ -101,12 +107,8 @@ public class ExcelController {
      * Excel预览
      */
     @GetMapping("/preview")
-    public String preview(@RequestParam("f") String filename,
-                          @RequestParam(value = "sheet", required = false) Integer sheet,
-                          Model model) {
-        if (null == sheet){
-            sheet = 0;
-        }
+    public String preview(@RequestParam("f") String filename, Model model) {
+
         FileInfo fileInfo = fileService.selectBySaveName(filename);
 
         if (fileInfo == null){
@@ -114,17 +116,31 @@ public class ExcelController {
         }
 
         String collectionName = FileUtil.getPrefix(filename);
-        Long lines = mongoService.getExcelLineCount(sheet, collectionName);
-        if (lines == null){
-            return "index";
-        }
+
+        // 获取总的sheet数量
+        Integer sheetCount = mongoService.getExcelSheetCount(collectionName);
 
         model.addAttribute("filename", filename);
-        model.addAttribute("lines", lines);
+        model.addAttribute("sheetCount", sheetCount);
         model.addAttribute("collectionName", collectionName);
         model.addAttribute("fileInfo", fileInfo);
+
         return "show";
     }
+
+
+    @PostMapping("/getLines/{coll}/{sheet}")
+    @ResponseBody
+    public Result getSheetLines(@PathVariable(value = "coll") String collectionName,
+                                @PathVariable(value = "sheet") Integer sheet){
+        Long lines = mongoService.getExcelLineCountBySheet(collectionName, sheet);
+        if (lines != null){
+            return Result.buildSuccess("获取成功", lines);
+        }else{
+            return Result.buildError("获取失败");
+        }
+    }
+
 
     @PostMapping("/getEx/{coll}/{sheet}/{curr}/{size}")
     @ResponseBody
@@ -136,11 +152,20 @@ public class ExcelController {
             // 默认读取第一个sheet
             sheet = 0;
         }
+
         List<ExcelLine> lineList = mongoService.getExcelLinesPage(collectionName, sheet, curr, size);
-        if (lineList != null){
-            return Result.buildSuccess(lineList);
-        }else{
+
+        if (lineList == null){
             return Result.buildError("获取分页信息失败");
         }
+
+        // 获取该表格页面必要的信息
+        ExcelPageVO pageVO = new ExcelPageVO();
+        Map<Long, ExcelLine> lineMap = lineList.stream().collect(Collectors.toMap(ExcelLine::getRow, ExcelLine -> ExcelLine));
+        pageVO.setLineMap(lineMap);
+        pageVO.setCount(lineList.size());
+        pageVO.setRowSet(lineMap.keySet());
+//        log.info("Excel响应体 : {}", pageVO);
+        return Result.buildSuccess("查询成功", pageVO);
     }
 }

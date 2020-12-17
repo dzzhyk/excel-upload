@@ -10,9 +10,10 @@
 <body>
 
 
+
     <div style="margin: 10px">
         <h3>文件信息</h3>
-        <table class="layui-table" lay-size="sm">
+        <table class="layui-table layui-table-cell" lay-size="sm" style="text-align: center;">
             <thead>
             <tr>
                 <th>存储id</th>
@@ -40,57 +41,134 @@
             </tr>
             </tbody>
         </table>
-
         <hr>
 
-        <table class="layui-table" lay-size="sm">
+        <div class="layui-tab" lay-filter="sheetTab">
+            <ul class="layui-tab-title">
+                <li th:each="sheet : ${#numbers.sequence(1, sheetCount)}" th:id="'sheet-'+${sheet}" th:text="'Sheet'+${sheet}" th:class="${sheet==1?'layui-this':''}"></li>
+            </ul>
+            <div class="layui-tab-content">
+                <div th:each="sheet : ${#numbers.sequence(1, sheetCount)}" class="layui-tab-item layui-show"></div>
+            </div>
+        </div>
+
+        <table class="layui-table layui-table-cell" lay-size="sm" style="text-align: center;">
+
             <tbody id="excel-tbody">
             <tr><td>行号</td></tr>
             </tbody>
         </table>
-        <div id="pager"></div>
-    </div>
 
+        <div id="pager"></div>
+
+    </div>
 
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <script th:src="@{/static/layui/layui.js}" charset="utf-8"></script>
 <script>
-    console.log("filename: [[${filename}]]", "lines: [[${lines}]]");
 
-    layui.use(['table', 'laypage'], function(){
-        let laypage = layui.laypage;
+    console.log("filename: [[${filename}]]", "sheet count: [[${sheetCount}]]");
 
-        //执行一个laypage实例
-        laypage.render({
-            elem: 'pager' //注意，这里的 test1 是 ID，不用加 # 号
-            ,count: [[${lines}]] //数据总数，从服务端得到
-            ,limit: 30
-            ,groups: 10
-            ,layout: ['prev', 'page', 'next', 'skip', 'limit', 'count']
-            ,jump: function(obj, first){
-                flushTable(obj)
+    // 默认参数
+    var sheetNow = 0;
+    var currNow = 1;
+    var limitNow = 20;
+    var lineCountNow;   // 总行数
+
+    window.onload = function(){
+        updateSheetLines();
+        renderTable();
+
+        layui.use('element', function () {
+            let element = layui.element;
+            element.on('tab(sheetTab)', function(data){
+                if (data.index !== sheetNow){
+                    sheetNow = data.index;
+                    updateSheetLines();
+                    renderTable();
+                }
+            });
+        });
+    }
+
+    // 根据当前信息更新sheet的总行数
+    function updateSheetLines() {
+        $.ajax({
+            url: "/getLines/[[${collectionName}]]/"+sheetNow,
+            type: "post",
+            success: function (res) {
+                if (res.code === 1){
+                    // 更新总行数
+                    lineCountNow = res.data;
+                    console.log("当前sheet总行数 : ", lineCountNow);
+                }else{
+                    console.log("获取总行数失败, sheet : ", sheetNow)
+                }
+            },
+            error: function () {
+                console.log("获取总行数失败, sheet : ", sheetNow)
             }
         });
-    });
+    }
 
-    function flushTable(obj) {
+    // 渲染表格
+    function renderTable() {
+        layui.use(['table', 'laypage'], function(){
+            let laypage = layui.laypage;
+            laypage.render({
+                elem: 'pager' //注意，这里的 test1 是 ID，不用加 # 号
+                ,count: lineCountNow //数据总数，从服务端得到
+                ,limit: limitNow
+                ,groups: 10
+                ,layout: ['prev', 'page', 'next', 'skip', 'limit', 'count']
+                ,jump: function(obj, first){
+                    currNow = obj.curr;
+                    limitNow = obj.limit;
+                    flushTable();
+                }
+            });
+        });
+    }
+
+    // 根据当前信息刷新表格内容
+    function flushTable() {
         let table = layui.table;
         $('#excel-tbody').empty();
-        console.log(obj.curr, obj.limit);
+        // console.log(currNow, limitNow);
         $.ajax({
-            url: "/getEx/[[${collectionName}]]/0/"+obj.curr+"/"+obj.limit,
-            type: "POST",
+            url: "/getEx/[[${collectionName}]]/"+sheetNow+"/"+currNow+"/"+limitNow,
+            type: "post",
             success: function (res) {
-                console.log(res);
+                // console.log(res);
                 var str = '';
-                let ls = res.data
-                for (let i=0; i<ls.length; i++){
-                    let temp = ls[i].rowList;
-                    str += '<tr><td>'+(ls[i].row+1)+'</td>';
-                    for (let j=0; j<temp.length; j++){
-                        str += '<td>'+temp[j]+'</td>'
+
+                let lineMap = res.data.lineMap;
+                let rowSet = res.data.rowSet;
+
+                for (let i=(currNow-1)*limitNow; i<currNow*limitNow; i++){
+                    // 第一列是行号
+                    str += '<tr><td>'+(i+1)+'</td>';
+                    if (rowSet.indexOf(i) !== -1){
+                        let temp = lineMap[i].rowList;
+                        let len = temp.length;
+                        if (temp.length < 26){
+                            len = 26;   // 最少显示26个
+                        }
+                        for (let j=0; j<len; j++){
+                            if (j < temp.length){
+                                str += '<td>'+temp[j]+'</td>'
+                            }else{
+                                str += '<td></td>'
+                            }
+                        }
+                        str += '</tr>';
+                    }else{
+                        // 如果该行没有数据，展示空数据
+                        for (let j=0; j<26; j++){
+                            str += '<td></td>'
+                        }
+                        str += '</tr>';
                     }
-                    str += '</tr>';
                 }
                 $('#excel-tbody').append(str);
             }

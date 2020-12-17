@@ -275,7 +275,7 @@
 
         // 单个上传失败，可能远程已经存在文件，或者网络超时失败
         uploader.on( 'uploadError', function( file ) {
-            changeStatus(file.id, "layui-bg-blue", "layui-bg-orange", "文件重复或传输错误");
+            changeStatus(file.id, "layui-bg-black", "layui-bg-orange", "文件重复或传输错误");
         });
 
         // 单个上传完成，不论失败还是成功
