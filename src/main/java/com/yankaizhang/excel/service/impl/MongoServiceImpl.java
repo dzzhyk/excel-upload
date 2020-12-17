@@ -54,7 +54,6 @@ public class MongoServiceImpl implements MongoService {
 
     @Override
     public synchronized Boolean parseExcel(File file, ExcelConstant type) {
-        long start = System.currentTimeMillis();
         if (!file.exists()){
             log.warn("待解析parse文件不存在");
             return false;
@@ -70,8 +69,6 @@ public class MongoServiceImpl implements MongoService {
                     xlsReader.read(file, -1);
                     insert2Mongo();
                 }
-                long end = System.currentTimeMillis();
-                log.info("文件: "+file.getName()+", 处理时长: " + (end-start) +" ms");
                 createIndexForExcel();
                 return true;
             }catch (Exception e){
@@ -85,8 +82,6 @@ public class MongoServiceImpl implements MongoService {
                     // 写入剩余
                     insert2Mongo();
                 }
-                long end = System.currentTimeMillis();
-                log.info("文件: "+file.getName()+", 处理时长: " + (end-start) +" ms");
                 createIndexForExcel();
                 return true;
             }catch (Exception e){
@@ -100,8 +95,6 @@ public class MongoServiceImpl implements MongoService {
 
     @Override
     public List<ExcelLine> getExcelLinesPage(String collectionName, Integer sheet, Integer curr, Integer size) {
-        long start = System.currentTimeMillis();
-
         ArrayList<AggregationOperation> operations = new ArrayList<>(4);
         operations.add( Aggregation.match(Criteria.where("sheet").is(sheet)));
         operations.add( Aggregation.match(Criteria.where("row").gte((curr-1) * size).lt(curr * size)));
@@ -109,11 +102,8 @@ public class MongoServiceImpl implements MongoService {
 
         Aggregation aggregation = Aggregation.newAggregation(operations);
         AggregationResults<ExcelLine> aggregate = mongoTemplate.aggregate(aggregation, collectionName, ExcelLine.class);
-        List<ExcelLine> excelLineList = aggregate.getMappedResults();
 
-        long end = System.currentTimeMillis();
-        log.info("sheet: " + sheet + ", curr: "+curr+", size: "+ size +" 查询时长: " + (end-start) +" ms");
-        return excelLineList;
+        return aggregate.getMappedResults();
     }
 
 

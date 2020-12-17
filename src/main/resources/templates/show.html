@@ -77,7 +77,6 @@
 
     window.onload = function(){
         updateSheetLines();
-        renderTable();
 
         layui.use('element', function () {
             let element = layui.element;
@@ -85,7 +84,6 @@
                 if (data.index !== sheetNow){
                     sheetNow = data.index;
                     updateSheetLines();
-                    renderTable();
                 }
             });
         });
@@ -101,6 +99,7 @@
                     // 更新总行数
                     lineCountNow = res.data;
                     console.log("当前sheet总行数 : ", lineCountNow);
+                    renderTable();
                 }else{
                     console.log("获取总行数失败, sheet : ", sheetNow)
                 }
@@ -113,6 +112,7 @@
 
     // 渲染表格
     function renderTable() {
+        console.log("渲染表格");
         layui.use(['table', 'laypage'], function(){
             let laypage = layui.laypage;
             laypage.render({

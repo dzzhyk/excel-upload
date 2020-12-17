@@ -135,7 +135,7 @@ public class ExcelController {
                                 @PathVariable(value = "sheet") Integer sheet){
         Long lines = mongoService.getExcelLineCountBySheet(collectionName, sheet);
         if (lines != null){
-            return Result.buildSuccess("获取成功", lines);
+            return Result.buildSuccess("获取总行数成功", lines);
         }else{
             return Result.buildError("获取失败");
         }
@@ -165,7 +165,6 @@ public class ExcelController {
         pageVO.setLineMap(lineMap);
         pageVO.setCount(lineList.size());
         pageVO.setRowSet(lineMap.keySet());
-//        log.info("Excel响应体 : {}", pageVO);
         return Result.buildSuccess("查询成功", pageVO);
     }
 }
