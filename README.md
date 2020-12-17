@@ -2,15 +2,18 @@
 
 Excel大文件上传存储示例项目
 
+作者：[@dzzhyk](https://github.com/dzzhyk)
+
 ## 前端
 
 Layui + WebUploader
 
 - 多文件上传队列
 - 分块、异步、多线程上传
-- 上传进度条、文件状态
+- 断点续传，服务端重复文件检测
+- 上传进度条、文件状态显示
 - 服务器文件列表和操作
-- Excel文件在线预览
+- Excel文件在线预览，支持预览多个sheet数据
 
 
 
@@ -64,3 +67,4 @@ SpringBoot + MongoDB + Mybatis-plus + JPA + Mysql
 | ---- | ------------ |
 | 100W | 4ms ~ 30ms   |
 | 4W * 10并发 |  5ms ~  |
+
