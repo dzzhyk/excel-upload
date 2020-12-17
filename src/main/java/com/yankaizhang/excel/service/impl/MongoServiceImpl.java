@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 @Service
 @Slf4j
@@ -43,9 +44,11 @@ public class MongoServiceImpl implements MongoService {
 
     private final List<ExcelLine> lineBuf = new ArrayList<>(512);
 
-    private static final int LINEBUF_SIZE = 500;
+    private static final int LINEBUF_SIZE = 1000;
 
     private String collectionName;
+
+    private static final ExecutorService executor = ThreadUtil.newExecutor(5);
 
     @Override
     public synchronized Boolean parseExcel(File file, ExcelConstant type) {
@@ -143,7 +146,7 @@ public class MongoServiceImpl implements MongoService {
      * 建立sheet_row复合索引
      */
     private void createIndexForExcel(){
-        ThreadUtil.execute(new Runnable() {
+        executor.execute(new Runnable() {
             @Override
             public void run() {
                 String resultStr = mongoTemplate.getCollection(collectionName)

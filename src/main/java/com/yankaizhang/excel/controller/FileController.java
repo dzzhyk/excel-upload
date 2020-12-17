@@ -87,6 +87,8 @@ public class FileController {
     public Result checkFile(@RequestParam("fileMd5") String fileMd5){
         FileInfo fileInfo = fileService.selectByMd5(fileMd5);
         if (null != fileInfo){
+            // 如果文件存在，把删除位改为-1
+            fileService.updateFileDelFlag(fileInfo.getSaveName(), -1);
             return Result.buildSuccess();
         }else{
             return Result.buildError();
@@ -197,7 +199,7 @@ public class FileController {
     @RequestMapping(value = "/delete", method = RequestMethod.POST)
     @ResponseBody
     public Result delete(@RequestParam("f") String filename){
-        Integer integer = fileService.deleteFile(filename);
+        Integer integer = fileService.updateFileDelFlag(filename, 1);
         if (integer > 0){
             return Result.buildSuccess("删除成功");
         }

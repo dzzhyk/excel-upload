@@ -35,9 +35,12 @@ public class ExcelController {
     @Value(value = "${excel.save-path}")
     private String uploadPath;
 
+    private static final ExecutorService executor = ThreadUtil.newExecutor(10);
+
     @PostMapping("/preEx")
     @ResponseBody
     public Result insertExcelFile(@RequestParam("f") String filename) {
+        log.info("收到写入请求 : {}", filename);
         FileInfo fileInfo = fileService.selectBySaveName(filename);
         if (fileInfo == null) {
             return Result.buildError("待导入文件记录不存在：" + filename);
@@ -54,10 +57,11 @@ public class ExcelController {
         }
 
         // 线程池
-        Future<Result> resultFuture = ThreadUtil.execAsync(new Callable<Result>() {
+        Future<Result> resultFuture = executor.submit(new Callable<Result>() {
             @Override
             public Result call() {
                 Boolean result;
+                log.info("开始写入 : {}", filename);
                 if (filename.endsWith("xls")) {
 
                     fileService.updateFileStatus(filename, FileStatusConstant.DOING_INSERT);

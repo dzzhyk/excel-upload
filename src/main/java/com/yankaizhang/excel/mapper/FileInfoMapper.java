@@ -9,7 +9,7 @@ import com.yankaizhang.excel.vo.FileInfoVO;
 
 public interface FileInfoMapper extends BaseMapper<FileInfo> {
 
-    Integer deleteBySaveName(String filename);
+    Integer updateFileDelFlagByFileName(String filename, int flag);
 
     FileInfo selectBySaveName(String filename);
 

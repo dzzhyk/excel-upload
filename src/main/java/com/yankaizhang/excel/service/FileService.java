@@ -28,7 +28,7 @@ public interface FileService {
      * 删除文件
      * @param filename 服务器文件名称
      */
-    Integer deleteFile(String filename);
+    Integer updateFileDelFlag(String filename, int flag);
 
     /**
      * 更新文件状态

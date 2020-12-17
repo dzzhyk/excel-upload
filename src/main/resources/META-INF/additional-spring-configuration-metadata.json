@@ -14,6 +14,21 @@
       "name": "excel.chunk-path",
       "type": "java.lang.String",
       "description": "excel.chunk-path."
+    },
+    {
+      "name": "spring.data.mongodb.custom.address",
+      "type": "java.lang.String",
+      "description": "Description for spring.data.mongodb.custom.address."
+    },
+    {
+      "name": "spring.data.mongodb.custom.max-connections",
+      "type": "java.lang.String",
+      "description": "Description for spring.data.mongodb.custom.max-connections."
+    },
+    {
+      "name": "spring.data.mongodb.custom.min-connections",
+      "type": "java.lang.String",
+      "description": "Description for spring.data.mongodb.custom.min-connections."
     }
   ]
 }

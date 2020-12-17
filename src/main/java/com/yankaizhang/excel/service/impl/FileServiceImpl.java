@@ -12,13 +12,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 /**
  * @author dzzhyk
@@ -37,6 +39,7 @@ public class FileServiceImpl implements FileService {
     private String chunkPath;
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED)
     public Integer insertFile(FileInfo fileInfo) {
         return fileInfoMapper.insert(fileInfo);
     }
@@ -66,11 +69,12 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public Integer deleteFile(String filename) {
-        return fileInfoMapper.deleteBySaveName(filename);
+    public Integer updateFileDelFlag(String filename, int flag) {
+        return fileInfoMapper.updateFileDelFlagByFileName(filename, flag);
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     public Integer updateFileStatus(String filename, int status) {
         return fileInfoMapper.updateFileStatus(filename, status);
     }

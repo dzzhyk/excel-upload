@@ -18,11 +18,12 @@
         `save_name` = #{filename};
     </update>
 
-    <delete id="deleteBySaveName">
-        DELETE FROM
+    <update id="updateFileDelFlagByFileName">
+        UPDATE
         <include refid="BASE_TABLE"/>
-        WHERE `save_name` = #{filename};
-    </delete>
+        SET `del_flag` = #{param2}
+        WHERE `save_name` = #{param1};
+    </update>
 
     <select id="selectByFileMd5" parameterType="String" resultType="com.yankaizhang.excel.entity.FileInfo">
         SELECT
@@ -45,6 +46,7 @@
         `true_name` as `trueName`, `save_name` as `saveName`, `file_md5` as fileMd5, `size` as `fileSize`, `created`, `status`
         FROM
         <include refid="BASE_TABLE"/>
+        WHERE `del_flag` = -1
     </select>
 
 </mapper>

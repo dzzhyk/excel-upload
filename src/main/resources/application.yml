@@ -3,7 +3,7 @@ server:
     tomcat:
         threads:
             max: 100
-            min-spare: 20
+            min-spare: 30
 
 spring:
     datasource:
