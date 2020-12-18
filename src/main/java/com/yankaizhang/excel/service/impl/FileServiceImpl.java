@@ -45,7 +45,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void downloadFile(String filename, HttpServletResponse response) {
+    public void downloadFile(String filename, HttpServletResponse response) throws IOException {
 
         File dir = new File(uploadPath);
         if (!dir.exists()){

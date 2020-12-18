@@ -61,32 +61,27 @@ public class MongoServiceImpl implements MongoService {
 
         // 使用文件名创建collection
         collectionName = FileUtil.getPrefix(file);
-        mongoTemplate.createCollection(collectionName);
 
-        if (ExcelConstant.XLS == type) {
-            try {
+        if (ExcelConstant.XLS == type || ExcelConstant.XLSX == type) {
+            mongoTemplate.createCollection(collectionName);
+            try{
                 if (file.exists()){
-                    xlsReader.read(file, -1);
+                    switch (type){
+                        case XLS:
+                            xlsReader.read(file, -1);break;
+                        case XLSX:
+                            xlsxReader.read(file, -1);break;
+                        default:
+                            break;
+                    }
                     insert2Mongo();
                 }
                 createIndexForExcel();
                 return true;
             }catch (Exception e){
                 e.printStackTrace();
-                return false;
-            }
-        } else if (ExcelConstant.XLSX == type) {
-            try {
-                if (file.exists()){
-                    xlsxReader.read(file, -1);
-                    // 写入剩余
-                    insert2Mongo();
-                }
-                createIndexForExcel();
-                return true;
-            }catch (Exception e){
-                e.printStackTrace();
-                log.debug(file.getName());
+                mongoTemplate.dropCollection(collectionName);
+                log.error("写入MongoDB出错 : {}", file.getName());
                 return false;
             }
         }

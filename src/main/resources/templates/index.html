@@ -128,12 +128,13 @@
             type: 2,
             title: filename,
             maxmin: true,
-            shadeClose: true, //点击遮罩关闭层
+            shadeClose: true,
             area : ['1600px' , '800px'],
             content: '/preview?f='+filename
         });
     }
 
+    // 下载文件
     function toDownload(filename) {
         window.location.href = '/download?f='+filename;
     }
@@ -141,7 +142,7 @@
     function toDel(filename) {
         $.ajax({
             url: "/delete?f="+filename,
-            type: "POST",
+            type: "post",
             success: function (res) {
                 console.log(res);
                 reloadTable();
@@ -149,12 +150,13 @@
         })
     }
 
+    // 开始导入文件
     function toInsert(filename, btn) {
         // let $ = layui.jquery;
         $(btn).remove();
         $.ajax({
             url: "/preEx?f="+filename,
-            type: "POST",
+            type: "post",
             success: function (res) {
                 console.log(res);
                 reloadTable();

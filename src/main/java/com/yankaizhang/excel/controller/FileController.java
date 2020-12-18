@@ -192,7 +192,7 @@ public class FileController {
     @ResponseBody
     public void download(
             HttpServletResponse response,
-            @RequestParam("f") String filename){
+            @RequestParam("f") String filename) throws IOException {
         fileService.downloadFile(filename, response);
     }
 
