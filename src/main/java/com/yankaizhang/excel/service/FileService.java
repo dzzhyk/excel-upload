@@ -23,7 +23,7 @@ public interface FileService {
      * @param filename 服务器文件名称
      * @param response 相应
      */
-    void downloadFile(String filename, HttpServletResponse response);
+    void downloadFile(String filename, HttpServletResponse response) throws IOException;
 
     /**
      * 删除文件

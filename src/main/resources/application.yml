@@ -3,7 +3,8 @@ server:
     tomcat:
         threads:
             max: 100
-            min-spare: 30
+            min-spare: 100
+        connection-timeout: 60s
 
 spring:
     datasource:
@@ -15,7 +16,7 @@ spring:
             password: root
             #配置初始化大小/最小/最大
             initial-size: 1
-            min-idle: 5
+            min-idle: 10
             max-active: 20
             #获取连接等待超时时间
             max-wait: 60000
@@ -59,6 +60,7 @@ mybatis-plus:
     global-config:
         banner: false
 
+# 上传分块文件和合并文件的保存路径
 excel:
     save-path: upload/
     chunk-path: chunk/

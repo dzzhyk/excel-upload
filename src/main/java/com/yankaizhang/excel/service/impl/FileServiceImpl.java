@@ -7,7 +7,8 @@ import com.yankaizhang.excel.entity.FileInfo;
 import com.yankaizhang.excel.mapper.FileInfoMapper;
 import com.yankaizhang.excel.service.FileService;
 import com.yankaizhang.excel.vo.FileInfoVO;
-import org.apache.catalina.connector.ClientAbortException;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
@@ -27,6 +28,7 @@ import java.nio.file.Paths;
  */
 @Service
 @Scope("prototype")
+@Slf4j
 public class FileServiceImpl implements FileService {
 
     @Autowired
@@ -49,6 +51,7 @@ public class FileServiceImpl implements FileService {
 
         File dir = new File(uploadPath);
         if (!dir.exists()){
+            log.warn("上传文件目录不存在 : {}", uploadPath);
             return;
         }
 
@@ -59,11 +62,10 @@ public class FileServiceImpl implements FileService {
 
         try (OutputStream os = response.getOutputStream()) {
             Files.copy(path, os);
-        }catch (ClientAbortException e){
+        }catch (IOException e){
             // 中断了下载
-
-        }catch (Exception e){
-            e.printStackTrace();
+            log.warn("下载中断 : {}", filename);
+            throw e;
         }
 
     }

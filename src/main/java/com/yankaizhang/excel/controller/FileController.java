@@ -65,7 +65,7 @@ public class FileController {
     /**
      * 分块文件上传
      */
-    @RequestMapping(value = "/uploadChunk", method = RequestMethod.POST)
+    @PostMapping("/uploadChunk")
     @ResponseBody
     public Result upload(@RequestParam("file") MultipartFile file,
                          @RequestParam("fileMd5") String fileMd5,
@@ -82,7 +82,7 @@ public class FileController {
     /**
      * 检查文件是否存在
      */
-    @RequestMapping(value = "/checkFile", method = RequestMethod.POST)
+    @PostMapping("/checkFile")
     @ResponseBody
     public Result checkFile(@RequestParam("fileMd5") String fileMd5){
         FileInfo fileInfo = fileService.selectByMd5(fileMd5);
@@ -98,7 +98,7 @@ public class FileController {
     /**
      * 检查分片是否已经存在
      */
-    @RequestMapping(value = "/checkChunk", method = RequestMethod.POST)
+    @PostMapping("/checkChunk")
     @ResponseBody
     public Result checkChunk(@RequestParam("fileMd5") String fileMd5,
                              @RequestParam("chunk") Integer chunk,
@@ -124,7 +124,7 @@ public class FileController {
     /**
      * 合并分块
      */
-    @RequestMapping(value = "/mergeChunk", method = RequestMethod.POST)
+    @PostMapping("/mergeChunk")
     @ResponseBody
     public Result mergeChunk(@RequestParam("fileMd5") String fileMd5,
                              @RequestParam("fileName") String fileName,
@@ -196,7 +196,7 @@ public class FileController {
         fileService.downloadFile(filename, response);
     }
 
-    @RequestMapping(value = "/delete", method = RequestMethod.POST)
+    @PostMapping("/delete")
     @ResponseBody
     public Result delete(@RequestParam("f") String filename){
         Integer integer = fileService.updateFileDelFlag(filename, 1);
