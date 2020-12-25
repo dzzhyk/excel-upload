@@ -4,8 +4,6 @@ Excel大文件上传存储示例项目
 
 作者：[@dzzhyk](https://github.com/dzzhyk)
 
-提示：未署名盗窃他人劳动成果用于学术发表等场合属违法行为。
-
 ## 前端
 
 Layui + WebUploader
