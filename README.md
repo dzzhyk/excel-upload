@@ -6,6 +6,8 @@ Excel大文件上传存储示例项目
 
 信息：2018级计科1班张艳锴
 
+在线演示：[link](http://excel.yankaizhang.com)
+
 ## 前端
 
 Layui + WebUploader
@@ -57,7 +59,7 @@ SpringBoot + MongoDB + Mybatis-plus + JPA + Mysql
 
 ```shell
 docker pull mongo:4.4
-docker run --name mongodb1 -d -v 本地路径:/data/db -p 27017:27017 mongo:4.4
+docker run --name mongodb -d -v 本地路径:/data/db -p 27017:27017 mongo:4.4
 ```
 
 - MongoDB插入性能
